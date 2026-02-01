@@ -1,35 +1,55 @@
----
-name: Python CI Pipeline
+name: Python CI CD Pipeline
+
 on:
   push:
     branches:
       - main
+
 jobs:
   build-test:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.9"
-      - name: Install pytest
+          python-version: '3.9'
+
+      - name: Install dependencies
         run: |
           pip install --upgrade pip
           pip install pytest
-      - name: Run Unit Tests
+
+      - name: Run unit tests
         run: |
           PYTHONPATH=. pytest
 
----
-deploy:
-  needs: build-test
-  runs-on: ubuntu-latest
-  steps:
-    - name: Download Build Artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: python-app-build
-    - name: Simulate Deployment
-      run: |
-        unzip python-app-build.zip
-        ls -R
+      - name: Create build artifact
+        run: |
+          zip -r python-app-build.zip app
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-app-build
+          path: python-app-build.zip
+
+
+  deploy:
+    needs: build-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: python-app-build
+
+      - name: Simulate deployment
+        run: |
+          unzip python-app-build.zip
+          ls -R
+          echo "Application deployed successfully 🚀"
